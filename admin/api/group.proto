@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+import "standard.proto";
+
+service Groups {
+  rpc Get(GetRequest) returns (Group) {}
+  rpc List(GroupListRequest) returns (GroupListResponse) {}
+  rpc Create(GroupCreateRequest) returns (GroupModificationResponse) {}
+  rpc Update(GroupUpdateRequest) returns (GroupModificationResponse) {}
+}
+
+message Group {
+  string id = 1;
+  uint64 created_at = 2;
+  uint64 updated_at = 3;
+  string name = 4;
+}
+
+message GroupListRequest {
+  PageRequest page = 1;
+  string name = 2;
+}
+
+message GroupListResponse {
+  uint32 total = 1;
+  repeated Group items = 2;
+}
+
+message GroupCreateRequest {
+  string name = 1;
+}
+
+message GroupUpdateRequest {
+  string id = 1;
+  string name = 2;
+}
+
+message GroupModificationResponse {
+  enum ResponseCode {
+    Ok = 0;
+    NameNonUnique = 1;
+  }
+  ResponseCode code = 1;
+  Group result = 2;
+}

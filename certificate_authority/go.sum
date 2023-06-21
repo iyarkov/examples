@@ -1,0 +1,6 @@
+github.com/iyarkov/foundation v0.0.0-20230611141437-b88ba32d431c h1:msMx7DKyfL9/GRwTAHZQyLLE1Abp+aMOrTzSL65HG5I=
+github.com/iyarkov/foundation v0.0.0-20230611141437-b88ba32d431c/go.mod h1:LvlpK2LjTcS2dK4CdibiTYVVDwxLAP4WbhLZh7R+rW8=
+github.com/mattn/go-colorable v0.1.12 h1:jF+Du6AlPIjs2BiUiQlKOX0rt3SujHxPnksPKZbaA40=
+github.com/mattn/go-isatty v0.0.14 h1:yVuAays6BHfxijgZPzw+3Zlu5yQgKGP2/hcQbHb7S9Y=
+github.com/rs/zerolog v1.29.1 h1:cO+d60CHkknCbvzEWxP0S9K6KqyTjrCNUy1LdQLCGPc=
+golang.org/x/sys v0.6.0 h1:MVltZSvRTcU2ljQOhs94SXPftV6DCNnZViHeQps87pQ=
