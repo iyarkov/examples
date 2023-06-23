@@ -10,8 +10,8 @@ if [ -z "$BUILD_NUMBER" ]; then
   BUILD_NUMBER="Unknown"
 fi
 BUILD_DATE="$(date)"
-GIT_REVISION="Unknown"
-#GIT_REVISION="$(git rev-parse HEAD)"
+#GIT_REVISION="Unknown"
+GIT_REVISION="$(git rev-parse HEAD)"
 
 
 echo 'package generated' > ${TARGET}/build.go

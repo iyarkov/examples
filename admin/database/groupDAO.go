@@ -4,9 +4,12 @@ import (
 	"context"
 	"examples/admin/model"
 	"fmt"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 )
+
+var ErrDuplicateName = fmt.Errorf("duplicate name")
 
 type GroupDAO interface {
 	Create(ctx context.Context, group *model.Group) error
@@ -29,11 +32,14 @@ func (dao *groupDAO) Create(ctx context.Context, group *model.Group) error {
 		return fmt.Errorf("transaction begin failed, %w", err)
 	}
 
-	_, err = tx.Exec(ctx, "insert into group_tbl(id, created_at, updated_at, name) values ($1, $2, $3, $4)",
-		group.Id, group.CreatedAt, group.UpdatedAt, group.Name)
+	err = tx.QueryRow(ctx, "insert into group_tbl(created_at, updated_at, name) values($1, $2, $3) returning id",
+		group.CreatedAt, group.UpdatedAt, group.Name).Scan(&group.Id)
 	if err != nil {
 		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
 			zerolog.Ctx(ctx).Err(rollbackErr).Msg("failure to rollback a transaction")
+		}
+		if errorCode(err) == pgerrcode.UniqueViolation {
+			return ErrDuplicateName
 		}
 		return fmt.Errorf("query failed, %w", err)
 	}

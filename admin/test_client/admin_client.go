@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/status"
 	"time"
 )
 
@@ -59,14 +60,19 @@ func main() {
 
 	client := generated.NewGroupsClient(conn)
 	request := generated.GroupCreateRequest{
-		Name: "New Group",
+		Name: "ф",
 	}
 	response, err := client.Create(ctx, &request)
+	log.Info().Msgf("gRPC response %v", response)
 	if err != nil {
-		log.Fatal().Err(err).Msg("create operation failed")
+		grpcStatus := status.Convert(err)
+		if grpcStatus.Details() != nil {
+			log.Error().Msgf("Error details: %v", grpcStatus.Details())
+		}
+		log.Fatal().Err(err).Msg("create operation failed with error")
 	}
-	if response.Code != generated.GroupModificationResponse_Ok {
-		log.Fatal().Msgf("create operation failed with code %v", response.Code)
+	if response.Status != nil && response.Status.Code != 0 {
+		log.Fatal().Msgf("create operation failed with code %d and details: %v", response.Status.Code, response.Status.Details)
 	}
 	log.Info().Msgf("Group %v created, ", response.Result)
 }

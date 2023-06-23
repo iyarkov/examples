@@ -2,13 +2,15 @@ package database
 
 import "github.com/iyarkov/foundation/schema"
 
+var SchemaName = "public"
+
 var expectedSchema = schema.Schema{
-	Name: "public",
+	Name: SchemaName,
 	Tables: map[string]schema.Table{
 		"group_tbl": {
 			Columns: map[string]schema.Column{
 				"id": {
-					Type:         "uint",
+					Type:         "int4",
 					NotNull:      true,
 					NumPrecision: 32,
 				},
@@ -38,5 +40,8 @@ var expectedSchema = schema.Schema{
 				},
 			},
 		},
+	},
+	Sequences: []string{
+		"group_tbl_id_seq",
 	},
 }

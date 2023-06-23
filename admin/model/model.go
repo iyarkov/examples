@@ -1,12 +1,11 @@
 package model
 
 import (
-	"github.com/google/uuid"
 	"time"
 )
 
 type Group struct {
-	Id        uuid.UUID
+	Id        int32
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Name      string

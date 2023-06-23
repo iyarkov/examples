@@ -19,7 +19,7 @@ type Module struct {
 	GroupDAO GroupDAO
 }
 
-func InitDb(ctx context.Context, cfg *config.DbConfig) (*Module, error) {
+func OpenDb(ctx context.Context, cfg *config.DbConfig) (*sql.DB, error) {
 	log := zerolog.Ctx(ctx)
 	connString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		cfg.Host, cfg.Port, cfg.User, cfg.Password.Value(), cfg.DbName)
@@ -27,12 +27,18 @@ func InitDb(ctx context.Context, cfg *config.DbConfig) (*Module, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open db: %w", err)
 	}
-	defer support.CloseWithWarning(ctx, db, "Failed to close the DB after schema updated")
 	err = db.Ping()
 	if err != nil {
 		return nil, fmt.Errorf("failed to ping db: %w", err)
 	}
-	log.Info().Msgf("connected to DB on %d:%d", cfg.Host, cfg.Port)
+	log.Info().Msgf("connected to DB on %s:%d", cfg.Host, cfg.Port)
+	return db, nil
+}
+
+func InitDb(ctx context.Context, cfg *config.DbConfig) (*Module, error) {
+	log := zerolog.Ctx(ctx)
+	db, err := OpenDb(ctx, cfg)
+	defer support.CloseWithWarning(ctx, db, "Failed to close the DB after schema updated")
 
 	_, newDbVersion, schemaErr := schema.Update(ctx, db, changeset)
 	if schemaErr != nil {
@@ -54,6 +60,8 @@ func InitDb(ctx context.Context, cfg *config.DbConfig) (*Module, error) {
 	}
 	log.Info().Msgf("DB Ready, schema version: %s", newDbVersion)
 
+	connString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		cfg.Host, cfg.Port, cfg.User, cfg.Password.Value(), cfg.DbName)
 	pool, err := pgxpool.New(context.Background(), connString)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open db pool: %w", err)
