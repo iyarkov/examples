@@ -37,6 +37,7 @@ func InitGrpc(ctx context.Context, cfg *Configuration, authCfg *auth.Configurati
 			foundationgrpc.ServerContextId,
 			foundationgrpc.ServerConnectionInfo,
 			foundationgrpc.NewServerAuthInterceptor(ctx, authCfg),
+			foundationgrpc.ServerTrace,
 		),
 	)
 

@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/iyarkov/foundation/config"
 	"github.com/iyarkov/foundation/logger"
-	"github.com/iyarkov/foundation/schema"
 	"github.com/iyarkov/foundation/support"
 	"github.com/rs/zerolog"
 	"os"
@@ -43,7 +42,7 @@ func main() {
 	}
 
 	log.Info().Msgf("recreating schema %s", database.SchemaName)
-	if err = schema.RecreateSchema(ctx, db, database.SchemaName); err != nil {
+	if err = sql.RecreateSchema(ctx, db, database.SchemaName); err != nil {
 		log.Error().Err(err).Msg("Failed to recreate schema")
 		os.Exit(1)
 	}

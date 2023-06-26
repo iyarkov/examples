@@ -1,8 +1,8 @@
 package database
 
-import "github.com/iyarkov/foundation/schema"
+import "github.com/iyarkov/foundation/sql"
 
-var changeset = []schema.Change{
+var changeset = []sql.Change{
 	{
 		Version: "1.0.0",
 		Commands: []string{

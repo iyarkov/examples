@@ -2,10 +2,10 @@ package database
 
 import (
 	"context"
-	"database/sql"
+	standardSql "database/sql"
 	"fmt"
 	"github.com/iyarkov/foundation/config"
-	"github.com/iyarkov/foundation/schema"
+	"github.com/iyarkov/foundation/sql"
 	"github.com/iyarkov/foundation/support"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -19,11 +19,11 @@ type Module struct {
 	GroupDAO GroupDAO
 }
 
-func OpenDb(ctx context.Context, cfg *config.DbConfig) (*sql.DB, error) {
+func OpenDb(ctx context.Context, cfg *config.DbConfig) (*standardSql.DB, error) {
 	log := zerolog.Ctx(ctx)
 	connString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		cfg.Host, cfg.Port, cfg.User, cfg.Password.Value(), cfg.DbName)
-	db, err := sql.Open("pgx", connString)
+	db, err := standardSql.Open("pgx", connString)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open db: %w", err)
 	}
@@ -38,14 +38,17 @@ func OpenDb(ctx context.Context, cfg *config.DbConfig) (*sql.DB, error) {
 func InitDb(ctx context.Context, cfg *config.DbConfig) (*Module, error) {
 	log := zerolog.Ctx(ctx)
 	db, err := OpenDb(ctx, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to DB: %w", err)
+	}
 	defer support.CloseWithWarning(ctx, db, "Failed to close the DB after schema updated")
 
-	_, newDbVersion, schemaErr := schema.Update(ctx, db, changeset)
+	_, newDbVersion, schemaErr := sql.Update(ctx, db, changeset)
 	if schemaErr != nil {
 		return nil, fmt.Errorf("failed to upgrade schema: %w", schemaErr)
 	}
 
-	validationMessages, validationErr := schema.Validate(ctx, db, expectedSchema, newDbVersion == changeset[len(changeset)-1].Version)
+	validationMessages, validationErr := sql.Validate(ctx, db, expectedSchema, newDbVersion == changeset[len(changeset)-1].Version)
 	if validationErr != nil {
 		return nil, fmt.Errorf("failed to validate schema: %w", validationErr)
 	}
@@ -62,7 +65,13 @@ func InitDb(ctx context.Context, cfg *config.DbConfig) (*Module, error) {
 
 	connString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		cfg.Host, cfg.Port, cfg.User, cfg.Password.Value(), cfg.DbName)
-	pool, err := pgxpool.New(context.Background(), connString)
+	connConfig, err := pgxpool.ParseConfig(connString)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open db pool: %w", err)
+	}
+	tracer := sql.OpenTelemetryTracer{}
+	connConfig.ConnConfig.Tracer = &tracer
+	pool, err := pgxpool.NewWithConfig(context.Background(), connConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open db pool: %w", err)
 	}

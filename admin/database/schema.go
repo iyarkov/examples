@@ -1,14 +1,14 @@
 package database
 
-import "github.com/iyarkov/foundation/schema"
+import "github.com/iyarkov/foundation/sql"
 
 var SchemaName = "public"
 
-var expectedSchema = schema.Schema{
+var expectedSchema = sql.Schema{
 	Name: SchemaName,
-	Tables: map[string]schema.Table{
+	Tables: map[string]sql.Table{
 		"group_tbl": {
-			Columns: map[string]schema.Column{
+			Columns: map[string]sql.Column{
 				"id": {
 					Type:         "int4",
 					NotNull:      true,
@@ -29,7 +29,7 @@ var expectedSchema = schema.Schema{
 					NotNull: true,
 				},
 			},
-			Indexes: map[string]schema.Index{
+			Indexes: map[string]sql.Index{
 				"group_tbl_pkey": {
 					Columns:  []string{"id"},
 					IsUnique: true,

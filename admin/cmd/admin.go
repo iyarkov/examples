@@ -11,18 +11,20 @@ import (
 	"github.com/iyarkov/foundation/config"
 	"github.com/iyarkov/foundation/logger"
 	"github.com/iyarkov/foundation/support"
+	"github.com/iyarkov/foundation/telemetry"
 	"github.com/iyarkov/foundation/tls"
 	"github.com/rs/zerolog"
 	"os"
 )
 
 type Configuration struct {
-	Auth     auth.Configuration
-	Manifest support.Manifest
-	Log      logger.Configuration
-	GRPC     grpc.Configuration
-	Db       config.DbConfig
-	TLS      tls.Configuration
+	Auth      auth.Configuration
+	Manifest  support.Manifest
+	Log       logger.Configuration
+	GRPC      grpc.Configuration
+	Db        config.DbConfig
+	TLS       tls.Configuration
+	Telemetry telemetry.Configuration
 }
 
 func main() {
@@ -36,10 +38,13 @@ func main() {
 	cfg.Manifest.Version = fmt.Sprintf("%s.%s", generated.Version, generated.BuildNumber)
 	support.AppManifest = cfg.Manifest
 
-	logger.InitLogger(cfg.Log)
+	logger.InitLogger(&cfg.Log)
 	ctx := logger.WithContextIdAndLogger(context.Background(), uuid.New().String())
 	log := zerolog.Ctx(ctx)
 	log.Info().Msgf("configuration: %+v", cfg)
+
+	cfg.Telemetry.Mode = "docker"
+	telemetry.InitTelemetry(ctx, &cfg.Telemetry)
 
 	tlsConfig, err := cfg.TLS.NewCryptoTlsConfig()
 	if err != nil {

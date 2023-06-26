@@ -28,6 +28,10 @@ func (m *groupsServer) List(ctx context.Context, request *generated.GroupListReq
 }
 
 func (m *groupsServer) Create(ctx context.Context, request *generated.GroupCreateRequest) (*generated.GroupModificationResponse, error) {
+	//ctx, span := telemetry.Tracer.Start(ctx, "groupsServer#Create")
+	//defer span.End()
+	//span.SetAttributes(attribute.String("contextId", support.ContextId(ctx)))
+
 	log := zerolog.Ctx(ctx)
 	authToken := auth.AuthToken(ctx)
 	if !authToken.IsInRole(auth.Admin) {
@@ -48,7 +52,7 @@ func (m *groupsServer) Create(ctx context.Context, request *generated.GroupCreat
 		}
 		return nil, grpcStatusWithDetails.Err()
 	}
-	
+
 	now := time.Now()
 	group := model.Group{
 		Name:      request.Name,
