@@ -19,6 +19,11 @@ type groupsServer struct {
 	groupDAO database.GroupDAO
 }
 
+func newGroupServer() (*groupsServer, error) {
+	srv := groupsServer{}
+	return &srv, nil
+}
+
 func (m *groupsServer) Get(ctx context.Context, request *generated.GetRequest) (*generated.Group, error) {
 	panic("not implemented")
 }
@@ -28,10 +33,6 @@ func (m *groupsServer) List(ctx context.Context, request *generated.GroupListReq
 }
 
 func (m *groupsServer) Create(ctx context.Context, request *generated.GroupCreateRequest) (*generated.GroupModificationResponse, error) {
-	//ctx, span := telemetry.Tracer.Start(ctx, "groupsServer#Create")
-	//defer span.End()
-	//span.SetAttributes(attribute.String("contextId", support.ContextId(ctx)))
-
 	log := zerolog.Ctx(ctx)
 	authToken := auth.AuthToken(ctx)
 	if !authToken.IsInRole(auth.Admin) {

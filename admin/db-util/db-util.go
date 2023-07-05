@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/iyarkov/foundation/config"
 	"github.com/iyarkov/foundation/logger"
+	"github.com/iyarkov/foundation/sql"
 	"github.com/iyarkov/foundation/support"
 	"github.com/rs/zerolog"
 	"os"
@@ -30,7 +31,7 @@ func main() {
 	cfg.Manifest.Version = fmt.Sprintf("%s.%s", generated.Version, generated.BuildNumber)
 	support.AppManifest = cfg.Manifest
 
-	logger.InitLogger(cfg.Log)
+	logger.InitLogger(&cfg.Log)
 	ctx := logger.WithContextIdAndLogger(context.Background(), uuid.New().String())
 	log := zerolog.Ctx(ctx)
 	log.Info().Msgf("configuration: %+v", cfg)

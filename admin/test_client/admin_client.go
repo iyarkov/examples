@@ -36,7 +36,7 @@ func main() {
 		KnownPeers: []string{"admin"},
 	}
 	telemetryCfg := telemetry.Configuration{
-		Mode: "docker",
+		Mode: "",
 	}
 
 	logger.InitLogger(&logCfg)
@@ -84,7 +84,7 @@ func main() {
 
 	client := generated.NewGroupsClient(conn)
 	request := generated.GroupCreateRequest{
-		Name: "as группа крови-22",
+		Name: "as группа s",
 	}
 	response, err := client.Create(ctx, &request)
 	span.End()

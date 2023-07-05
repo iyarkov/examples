@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/iyarkov/foundation/auth"
 	foundationgrpc "github.com/iyarkov/foundation/grpc"
+	"github.com/iyarkov/foundation/logger"
 	"github.com/iyarkov/foundation/support"
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
@@ -24,6 +25,7 @@ type Module struct {
 }
 
 func InitGrpc(ctx context.Context, cfg *Configuration, authCfg *auth.Configuration, dbModule *database.Module, tlsCfg *tls.Config) error {
+	log := zerolog.Ctx(ctx)
 	if cfg.Port == 0 {
 		cfg.Port = 8443
 	}
@@ -31,9 +33,15 @@ func InitGrpc(ctx context.Context, cfg *Configuration, authCfg *auth.Configurati
 	if err != nil {
 		return err
 	}
+
+	metricInterceptor, err := foundationgrpc.NewServerMetricInterceptor(ctx)
+	if err != nil {
+		return err
+	}
 	grpcServer := grpc.NewServer(
 		grpc.Creds(credentials.NewTLS(tlsCfg)),
 		grpc.ChainUnaryInterceptor(
+			metricInterceptor,
 			foundationgrpc.ServerContextId,
 			foundationgrpc.ServerConnectionInfo,
 			foundationgrpc.NewServerAuthInterceptor(ctx, authCfg),
@@ -41,17 +49,20 @@ func InitGrpc(ctx context.Context, cfg *Configuration, authCfg *auth.Configurati
 		),
 	)
 
-	gm := groupsServer{
-		groupDAO: dbModule.GroupDAO,
+	gm, err := newGroupServer()
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to create group server")
 	}
-	generated.RegisterGroupsServer(grpcServer, &gm)
-	log := zerolog.Ctx(ctx)
+	gm.groupDAO = dbModule.GroupDAO
+	generated.RegisterGroupsServer(grpcServer, gm)
 	log.Info().Msgf("starting grpc server on %d", cfg.Port)
 
-	support.OnSigTerm(func(signal os.Signal) {
-		log.Info().Msg("Shutting down gRPC server")
+	support.OnSigTerm(func(shutdownContext context.Context, signal os.Signal) {
+		shutdownContext = logger.WithLogger(shutdownContext)
+		shutdownLog := zerolog.Ctx(shutdownContext)
+		shutdownLog.Info().Msg("Shutting down gRPC server")
 		grpcServer.GracefulStop()
-		log.Info().Msgf("gRPC server stopped")
+		shutdownLog.Info().Msgf("gRPC server stopped")
 	})
 
 	return grpcServer.Serve(lis)

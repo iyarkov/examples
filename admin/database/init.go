@@ -5,6 +5,7 @@ import (
 	standardSql "database/sql"
 	"fmt"
 	"github.com/iyarkov/foundation/config"
+	"github.com/iyarkov/foundation/logger"
 	"github.com/iyarkov/foundation/sql"
 	"github.com/iyarkov/foundation/support"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -80,10 +81,12 @@ func InitDb(ctx context.Context, cfg *config.DbConfig) (*Module, error) {
 		return nil, fmt.Errorf("failed to ping db pool: %w", err)
 	}
 
-	support.OnSigTerm(func(signal os.Signal) {
-		log.Info().Msg("Closing DB connection pool")
+	support.OnSigTerm(func(shutdownContext context.Context, signal os.Signal) {
+		shutdownContext = logger.WithLogger(shutdownContext)
+		shutdownLog := zerolog.Ctx(shutdownContext)
+		shutdownLog.Info().Msg("Closing DB connection pool")
 		pool.Close()
-		log.Info().Msg("DB connection pool closed")
+		shutdownLog.Info().Msg("DB connection pool closed")
 	})
 
 	module := Module{

@@ -1,9 +1,8 @@
 version: '3.8'
 
 services:
-
   db:
-    container_name: "postgres"
+    container_name: "m-postgres"
     image: postgres
     ports:
       - "5432:5432"
@@ -11,10 +10,21 @@ services:
       POSTGRES_PASSWORD: example
 
   jager:
-    container_name: "jager"
+    container_name: "m-jager"
     image: jaegertracing/all-in-one:1.46
     ports:
       - "16686:16686"
       - "4317:4317"
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
+
+  prometeus:
+    container_name: "m-prometheus"
+    image: prom/prometheus
+    volumes:
+      - type: bind
+        source: ./prometheus.yml
+        target: /etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+
